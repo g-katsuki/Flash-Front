@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CardList } from '@/components/CardList';
 import { CardForm } from '@/components/CardForm';
 import { FolderList } from '@/components/FolderList';
@@ -22,6 +22,12 @@ const mockFolders: Folder[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  {
+    id: '3',
+    name: 'API Cards',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
 ];
 
 const mockCards: FlashCard[] = [
@@ -58,10 +64,11 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [editingCard, setEditingCard] = useState<FlashCard | null>(null);
   const [showFolders, setShowFolders] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredCards = selectedFolderId
-    ? cards.filter(card => card.folderId === selectedFolderId)
-    : [];
+  const filteredCards = cards.filter(card => card.folderId === selectedFolderId);
+  console.log('Selected Folder ID:', selectedFolderId);
+  console.log('Filtered Cards:', filteredCards);
 
   const handleAddFolder = (name: string) => {
     const newFolder: Folder = {
@@ -98,9 +105,9 @@ export default function Home() {
     if (!selectedFolderId) return;
     
     const newCard: FlashCard = {
+      ...cardData,
       id: Date.now().toString(),
       folderId: selectedFolderId,
-      ...cardData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -140,9 +147,32 @@ export default function Home() {
     setShowForm(false);
   };
 
+  const fetchCardsFromApi = async (folderId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/cards');
+      const apiCards: FlashCard[] = await response.json();
+      console.log('Fetched API cards:', apiCards);
+      const cardsWithFolderId = apiCards.map(card => ({
+        ...card,
+        folderId
+      }));
+      console.log('Cards with folderId:', cardsWithFolderId);
+      setCards(prevCards => [...prevCards, ...cardsWithFolderId]);
+    } catch (error) {
+      console.error('Failed to fetch cards:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSelectFolder = (folderId: string) => {
     setSelectedFolderId(folderId);
-    setShowFolders(false); // Close folder list on mobile after selection
+    setShowFolders(false);
+    
+    if (folderId === '3' && !cards.some(card => card.folderId === '3')) {
+      fetchCardsFromApi(folderId);
+    }
   };
 
   return (
@@ -213,11 +243,23 @@ export default function Home() {
               </div>
             )}
             {selectedFolderId ? (
-              <CardList
-                cards={filteredCards}
-                onEdit={handleEditCard}
-                onDelete={handleDeleteCard}
-              />
+              <>
+                {isLoading ? (
+                  <div className="text-center text-gray-500 mt-8">
+                    Loading cards...
+                  </div>
+                ) : filteredCards.length > 0 ? (
+                  <CardList
+                    cards={filteredCards}
+                    onEdit={handleEditCard}
+                    onDelete={handleDeleteCard}
+                  />
+                ) : (
+                  <div className="text-center text-gray-500 mt-8">
+                    No cards found in this folder
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center text-gray-500 mt-8">
                 Please select a folder to view cards
