@@ -101,18 +101,32 @@ export default function Home() {
     }
   };
 
-  const handleAddCard = (cardData: FlashCardRequest) => {
+  const handleAddCard = async (cardData: FlashCardRequest) => {
     if (!selectedFolderId) return;
     
-    const newCard: FlashCard = {
-      ...cardData,
-      id: Date.now().toString(),
-      folderId: selectedFolderId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setCards([...cards, newCard]);
-    setShowForm(false);
+    try {
+      const response = await fetch('http://localhost:8080/api/flashcards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...cardData,
+          folderId: selectedFolderId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add card');
+      }
+
+      const newCard: FlashCard = await response.json();
+      setCards(prevCards => [...prevCards, newCard]);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error adding card:', error);
+      // ここでエラーメッセージを表示するなどのエラーハンドリングを追加できます
+    }
   };
 
   const handleEditCard = (card: FlashCard) => {
@@ -149,16 +163,26 @@ export default function Home() {
 
   const fetchCardsFromApi = async (folderId: string) => {
     setIsLoading(true);
+    console.log('Fetching cards from API...');
     try {
-      const response = await fetch('/api/cards');
+      const response = await fetch('http://localhost:8080/api/flashcards');
+      console.log('API Response:', response);
       const apiCards: FlashCard[] = await response.json();
       console.log('Fetched API cards:', apiCards);
+      
+      // APIから取得したカードにfolderIdを設定
       const cardsWithFolderId = apiCards.map(card => ({
         ...card,
-        folderId
+        folderId: folderId // 明示的にfolderIdを設定
       }));
-      console.log('Cards with folderId:', cardsWithFolderId);
-      setCards(prevCards => [...prevCards, ...cardsWithFolderId]);
+      
+      setCards(prevCards => {
+        // 同じフォルダのカードを除外して新しいカードを追加
+        const otherCards = prevCards.filter(card => card.folderId !== folderId);
+        return [...otherCards, ...cardsWithFolderId];
+      });
+      
+      console.log('Updated cards state:', cards);
     } catch (error) {
       console.error('Failed to fetch cards:', error);
     } finally {
@@ -167,10 +191,12 @@ export default function Home() {
   };
 
   const handleSelectFolder = (folderId: string) => {
+    console.log('Selected folder:', folderId);
     setSelectedFolderId(folderId);
     setShowFolders(false);
     
     if (folderId === '3' && !cards.some(card => card.folderId === '3')) {
+      console.log('Triggering API fetch for folder 3');
       fetchCardsFromApi(folderId);
     }
   };
