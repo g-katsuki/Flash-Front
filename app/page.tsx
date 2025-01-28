@@ -105,7 +105,7 @@ export default function Home() {
     if (!selectedFolderId) return;
     
     try {
-      const response = await fetch('http://localhost:8080/api/flashcards', {
+      const response = await fetch('http://54.95.151.218:8080/api/flashcards', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +165,7 @@ export default function Home() {
     setIsLoading(true);
     console.log('Fetching cards from API...');
     try {
-      const response = await fetch('http://localhost:8080/api/flashcards');
+      const response = await fetch('http://54.95.151.218:8080/api/flashcards');
       console.log('API Response:', response);
       const apiCards: FlashCard[] = await response.json();
       console.log('Fetched API cards:', apiCards);
