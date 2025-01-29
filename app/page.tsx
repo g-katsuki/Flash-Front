@@ -8,6 +8,8 @@ import { FlashCard, FlashCardRequest, Folder } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '//54.95.151.218:8080';
+
 // Temporary mock data until backend is integrated
 const mockFolders: Folder[] = [
   {
@@ -105,10 +107,12 @@ export default function Home() {
     if (!selectedFolderId) return;
     
     try {
-      const response = await fetch('http://54.95.151.218:8080/api/flashcards', {
+      const response = await fetch(`${API_BASE_URL}/api/flashcards`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           ...cardData,
@@ -165,8 +169,24 @@ export default function Home() {
     setIsLoading(true);
     console.log('Fetching cards from API...');
     try {
-      const response = await fetch('http://54.95.151.218:8080/api/flashcards');
+      const response = await fetch(`${API_BASE_URL}/api/flashcards`, {
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
       console.log('API Response:', response);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`API error: ${response.status} ${errorText}`);
+      }
+
       const apiCards: FlashCard[] = await response.json();
       console.log('Fetched API cards:', apiCards);
       
