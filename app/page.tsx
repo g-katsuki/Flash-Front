@@ -109,7 +109,6 @@ export default function Home() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/flashcards`, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -170,7 +169,6 @@ export default function Home() {
     console.log('Fetching cards from API...');
     try {
       const response = await fetch(`${API_BASE_URL}/api/flashcards`, {
-        credentials: 'include',
         headers: {
           'Accept': 'application/json',
         }
@@ -182,13 +180,24 @@ export default function Home() {
         console.error('API Error:', {
           status: response.status,
           statusText: response.statusText,
-          body: errorText
+          body: errorText,
+          url: response.url
         });
         throw new Error(`API error: ${response.status} ${errorText}`);
       }
 
-      const apiCards: FlashCard[] = await response.json();
-      console.log('Fetched API cards:', apiCards);
+      const text = await response.text();
+      console.log('Raw response:', text);
+      
+      let apiCards: FlashCard[];
+      try {
+        apiCards = JSON.parse(text);
+      } catch (e) {
+        console.error('JSON parse error:', e);
+        throw new Error('Invalid JSON response from API');
+      }
+
+      console.log('Parsed API cards:', apiCards);
       
       // APIから取得したカードにfolderIdを設定
       const cardsWithFolderId = apiCards.map(card => ({
@@ -197,17 +206,17 @@ export default function Home() {
       }));
       
       setCards(prevCards => {
-        // 同じフォルダのカードを除外して新しいカードを追加
         const otherCards = prevCards.filter(card => card.folderId !== folderId);
-        return [...otherCards, ...cardsWithFolderId];
+        const newCards = [...otherCards, ...cardsWithFolderId];
+        console.log('New cards state:', newCards);
+        return newCards;
       });
-      
-      console.log('Updated cards state:', cards);
     } catch (error) {
       console.error('Failed to fetch cards:', error);
-    } finally {
       setIsLoading(false);
+      return;
     }
+    setIsLoading(false);
   };
 
   const handleSelectFolder = (folderId: string) => {
