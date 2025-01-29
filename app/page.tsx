@@ -8,7 +8,7 @@ import { FlashCard, FlashCardRequest, Folder } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '//54.95.151.218:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://54.95.151.218:8080';
 
 // Temporary mock data until backend is integrated
 const mockFolders: Folder[] = [
@@ -166,9 +166,11 @@ export default function Home() {
 
   const fetchCardsFromApi = async (folderId: string) => {
     setIsLoading(true);
-    console.log('Fetching cards from API...');
+    const apiUrl = `${API_BASE_URL}/api/flashcards`;
+    console.log('Attempting to fetch from:', apiUrl);
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/api/flashcards`, {
+      const response = await fetch(apiUrl, {
         headers: {
           'Accept': 'application/json',
         }
@@ -177,23 +179,21 @@ export default function Home() {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText,
-          url: response.url
-        });
         throw new Error(`API error: ${response.status} ${errorText}`);
       }
 
       const text = await response.text();
       console.log('Raw response:', text);
       
+      if (!text) {
+        throw new Error('Empty response from API');
+      }
+
       let apiCards: FlashCard[];
       try {
         apiCards = JSON.parse(text);
       } catch (e) {
-        console.error('JSON parse error:', e);
+        console.error('JSON parse error:', e, 'Response text:', text);
         throw new Error('Invalid JSON response from API');
       }
 
@@ -212,7 +212,12 @@ export default function Home() {
         return newCards;
       });
     } catch (error) {
-      console.error('Failed to fetch cards:', error);
+      console.error('Fetch error details:', {
+        error,
+        url: apiUrl,
+        baseUrl: API_BASE_URL,
+        env: process.env.NEXT_PUBLIC_API_URL
+      });
       setIsLoading(false);
       return;
     }
