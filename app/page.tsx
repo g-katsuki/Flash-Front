@@ -156,8 +156,25 @@ export default function Home() {
     setShowForm(false);
   };
 
-  const handleDeleteCard = (id: string) => {
-    setCards(cards.filter(card => card.id !== id));
+  const handleDeleteCard = async (id: string) => {
+    console.log('Deleting card with ID:', id);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/flashcards/${Number(id)}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.log('Delete response status:', response.status);
+        throw new Error('Failed to delete card');
+      }
+
+      setCards(prevCards => prevCards.filter(card => card.id !== id));
+    } catch (error) {
+      console.error('Error deleting card:', error);
+    }
   };
 
   const handleCancelEdit = () => {
