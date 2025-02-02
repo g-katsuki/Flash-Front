@@ -8,7 +8,8 @@ import { FlashCard, FlashCardRequest, Folder } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://54.95.151.218:8080';
+// 変更後：プロトコルに依存しないURLを使用
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://katsuki-flashcard.jp';
 
 // Temporary mock data until backend is integrated
 const mockFolders: Folder[] = [
