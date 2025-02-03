@@ -44,8 +44,10 @@ export function FlashCard({ frontContent, backContent, onEdit, onDelete }: Flash
               {onDelete && (
                 <button
                   onClick={(e) => {
+                    if (window.confirm('Are you sure you want to delete this folder and all its cards?')) {
                     e.stopPropagation();
                     onDelete();
+                    }
                   }}
                   className="text-red-600 hover:text-red-800"
                 >
