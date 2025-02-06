@@ -6,7 +6,8 @@ import { CardForm } from '@/components/CardForm';
 import { FolderList } from '@/components/FolderList';
 import { FlashCard, FlashCardRequest, Folder } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, Wand2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // 変更後：プロトコルに依存しないURLを使用
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://katsuki-flashcard.jp';
@@ -68,6 +69,9 @@ export default function Home() {
   const [editingCard, setEditingCard] = useState<FlashCard | null>(null);
   const [showFolders, setShowFolders] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [generatedSentence, setGeneratedSentence] = useState<string>('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const filteredCards = cards.filter(card => card.folderId === selectedFolderId);
   console.log('Selected Folder ID:', selectedFolderId);
@@ -253,6 +257,57 @@ export default function Home() {
     }
   };
 
+  const handleGenerateSentence = async () => {
+    if (!selectedFolderId) return;
+    setIsGenerating(true);
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000);
+
+      const response = await fetch(`http://localhost:8080/api/flashcards/folder/3/generate-sentence`, {
+        headers: {
+          'Accept': 'application/json',
+        },
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error('Failed to generate sentence');
+      }
+
+      const text = await response.text();
+      console.log('Raw response:', text);
+
+      if (!text) {
+        throw new Error('Empty response from server');
+      }
+
+      // プレーンテキストをJSONオブジェクトに変換
+      const sentence = text.split('\n').find(line => 
+        line.includes('"') && !line.startsWith('This')
+      )?.match(/"([^"]+)"/)?.[1] || '';
+
+      if (sentence) {
+        setGeneratedSentence(sentence);
+        setIsDialogOpen(true);
+      } else {
+        throw new Error('Could not extract sentence from response');
+      }
+    } catch (error) {
+      console.error('Error generating sentence:', error);
+      if (error.name === 'AbortError') {
+        alert('Request timed out. Please try again.');
+      } else {
+        alert('Failed to generate sentence. Please try again.');
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
@@ -268,14 +323,39 @@ export default function Home() {
               </Button>
               <h1 className="text-2xl font-bold text-gray-900">Flashcards</h1>
             </div>
-            {selectedFolderId && !showForm && (
-              <Button
-                onClick={() => setShowForm(true)}
-                className="flex items-center gap-2"
-              >
-                <PlusIcon className="h-4 w-4" />
-                Add Card
-              </Button>
+            {selectedFolderId && (
+              <div className="flex gap-2">
+                {!showForm && (
+                  <Button
+                    onClick={() => setShowForm(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    Add Card
+                  </Button>
+                )}
+                <Button
+                  onClick={handleGenerateSentence}
+                  className="flex items-center gap-2"
+                  variant="outline"
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4" />
+                      Generate AI Sentence
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -346,6 +426,17 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generated Sentence</DialogTitle>
+          </DialogHeader>
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <p className="text-lg text-gray-800">{generatedSentence}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
