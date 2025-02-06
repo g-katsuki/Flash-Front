@@ -265,7 +265,9 @@ export default function Home() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 300000);
 
-      const response = await fetch(`http://localhost:8080/api/flashcards/folder/3/generate-sentence`, {
+  // `${API_BASE_URL}/api/flashcards/folder/3/generate-sentence`
+  // `http://localhost:8080/api/flashcards/folder/3/generate-sentence`
+  const response = await fetch(`${API_BASE_URL}/api/flashcards/folder/3/generate-sentence`, {
         headers: {
           'Accept': 'application/json',
         },
