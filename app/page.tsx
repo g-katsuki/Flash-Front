@@ -65,7 +65,7 @@ const mockCards: FlashCard[] = [
 
 export default function Home() {
   const [folders, setFolders] = useState<Folder[]>(mockFolders);
-  const [cards, setCards] = useState<FlashCard[]>(mockCards);
+  const [cards, setCards] = useState<FlashCard[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingCard, setEditingCard] = useState<FlashCard | null>(null);
@@ -190,7 +190,7 @@ export default function Home() {
 
   const fetchCardsFromApi = async (folderId: string) => {
     setIsLoading(true);
-    const apiUrl = `${API_BASE_URL}/api/flashcards`;
+    const apiUrl = `${API_BASE_URL}/api/flashcards/folder/${folderId}`;
     console.log('Attempting to fetch from:', apiUrl);
     
     try {
@@ -235,7 +235,7 @@ export default function Home() {
         console.log('New cards state:', newCards);
         return newCards;
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Fetch error details:', {
         error,
         url: apiUrl,
@@ -253,10 +253,9 @@ export default function Home() {
     setSelectedFolderId(folderId);
     setShowFolders(false);
     
-    if (folderId === '3' && !cards.some(card => card.folderId === '3')) {
-      console.log('Triggering API fetch for folder 3');
-      fetchCardsFromApi(folderId);
-    }
+    // 選択されたフォルダのカードを取得
+    console.log(`Triggering API fetch for folder ${folderId}`);
+    fetchCardsFromApi(folderId);
   };
 
   const handleGenerateSentence = async () => {
