@@ -8,9 +8,11 @@ import { FlashCard, FlashCardRequest, Folder } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, Wand2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CsvUploader } from '@/components/CsvUploader';
 
 // 変更後：プロトコルに依存しないURLを使用
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://katsuki-flashcard.jp';
+// https://katsuki-flashcard.jp
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // Temporary mock data until backend is integrated
 const mockFolders: Folder[] = [
@@ -267,7 +269,7 @@ export default function Home() {
 
   // `${API_BASE_URL}/api/flashcards/folder/3/generate-sentence`
   // `http://localhost:8080/api/flashcards/folder/3/generate-sentence`
-  const response = await fetch(`${API_BASE_URL}/api/flashcards/folder/3/generate-sentence`, {
+  const response = await fetch(`http://localhost:8080/api/flashcards/folder/3/generate-sentence`, {
         headers: {
           'Accept': 'application/json',
         },
@@ -288,10 +290,12 @@ export default function Home() {
       }
 
       // プレーンテキストをJSONオブジェクトに変換
-      const sentence = text.split('\n').find(line => 
-        line.includes('"') && !line.startsWith('This')
-      )?.match(/"([^"]+)"/)?.[1] || '';
-
+      // const sentence = text.split('\n').find(line => 
+      //   line.includes('"') && !line.startsWith('This')
+      // )?.match(/"([^"]+)"/)?.[1] || '';
+      // gpt-4ominiに変えたことで文の携帯が変わったので直接使用
+      const sentence = text.split('\n').find(line => line.includes(''));
+      console.log(sentence);
       if (sentence) {
         setGeneratedSentence(sentence);
         setIsDialogOpen(true);
@@ -307,6 +311,31 @@ export default function Home() {
       }
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleCsvUpload = async (cards: FlashCardRequest[]) => {
+    try {
+      for (const card of cards) {
+        const response = await fetch(`${API_BASE_URL}/api/flashcards`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(card),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to add card');
+        }
+
+        const newCard: FlashCard = await response.json();
+        setCards(prevCards => [...prevCards, newCard]);
+      }
+    } catch (error: unknown) {
+      console.error('Error adding cards from CSV:', error);
+      alert('カードの追加中にエラーが発生しました。');
     }
   };
 
@@ -388,6 +417,14 @@ export default function Home() {
                 onEditFolder={handleEditFolder}
                 onDeleteFolder={handleDeleteFolder}
               />
+              {selectedFolderId && (
+                <div className="mt-4">
+                  <CsvUploader
+                    onUpload={handleCsvUpload}
+                    folderId={selectedFolderId}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
