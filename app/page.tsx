@@ -12,6 +12,7 @@ import { CsvUploader } from '@/components/CsvUploader';
 
 // 変更後：プロトコルに依存しないURLを使用
 // https://katsuki-flashcard.jp
+// http://localhost:8080
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://katsuki-flashcard.jp';
 
 // Temporary mock data until backend is integrated
@@ -266,9 +267,7 @@ export default function Home() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 300000);
 
-  // `${API_BASE_URL}/api/flashcards/folder/3/generate-sentence`
-  // `http://localhost:8080/api/flashcards/folder/3/generate-sentence`
-  const response = await fetch(`http://localhost:8080/api/flashcards/folder/3/generate-sentence`, {
+      const response = await fetch(`${API_BASE_URL}/api/flashcards/folder/${selectedFolderId}/generate-sentence`, {
         headers: {
           'Accept': 'application/json',
         },
