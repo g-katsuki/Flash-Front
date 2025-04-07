@@ -12,7 +12,7 @@ import { CsvUploader } from '@/components/CsvUploader';
 
 // 変更後：プロトコルに依存しないURLを使用
 // https://katsuki-flashcard.jp
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://katsuki-flashcard.jp';
 
 // Temporary mock data until backend is integrated
 const mockFolders: Folder[] = [
