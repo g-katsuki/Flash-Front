@@ -15,7 +15,7 @@ export function FlashCard({ frontContent, backContent, onEdit, onDelete }: Flash
 
   return (
     <div
-      className="relative w-full h-[300px] perspective-1000"
+      className="relative w-full aspect-[3/2] perspective-1000"
       onClick={() => setIsFlipped(!isFlipped)}
     >
       <div
@@ -25,18 +25,18 @@ export function FlashCard({ frontContent, backContent, onEdit, onDelete }: Flash
         )}
       >
         <div className="absolute w-full h-full backface-hidden">
-          <div className="w-full h-full bg-white rounded-xl shadow-lg p-6 flex flex-col">
+          <div className="w-full h-full bg-white rounded-lg shadow-sm p-1.5 flex flex-col">
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-2xl font-medium text-gray-800">{frontContent}</p>
+              <p className="text-xs font-medium text-gray-800 break-words text-center px-1">{frontContent}</p>
             </div>
-            <div className="mt-4 flex justify-end space-x-2">
+            <div className="mt-0.5 flex justify-end space-x-1">
               {onEdit && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit();
                   }}
-                  className="text-blue-600 hover:text-blue-800"
+                  className="text-blue-600 hover:text-blue-800 text-[10px]"
                 >
                   Edit
                 </button>
@@ -44,12 +44,12 @@ export function FlashCard({ frontContent, backContent, onEdit, onDelete }: Flash
               {onDelete && (
                 <button
                   onClick={(e) => {
-                    if (window.confirm('Are you sure you want to delete this folder and all its cards?')) {
-                    e.stopPropagation();
-                    onDelete();
+                    if (window.confirm('Are you sure you want to delete this card?')) {
+                      e.stopPropagation();
+                      onDelete();
                     }
                   }}
-                  className="text-red-600 hover:text-red-800"
+                  className="text-red-600 hover:text-red-800 text-[10px]"
                 >
                   Delete
                 </button>
@@ -58,8 +58,8 @@ export function FlashCard({ frontContent, backContent, onEdit, onDelete }: Flash
           </div>
         </div>
         <div className="absolute w-full h-full backface-hidden rotate-y-180">
-          <div className="w-full h-full bg-white rounded-xl shadow-lg p-6 flex items-center justify-center">
-            <p className="text-xl text-gray-700">{backContent}</p>
+          <div className="w-full h-full bg-white rounded-lg shadow-sm p-1.5 flex items-center justify-center">
+            <p className="text-xs text-gray-700 break-words text-center px-1">{backContent}</p>
           </div>
         </div>
       </div>
