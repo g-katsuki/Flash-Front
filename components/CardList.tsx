@@ -12,7 +12,7 @@ interface CardListProps {
 
 export function CardList({ cards, onEdit, onDelete }: CardListProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3">
       {cards.map((card) => (
         <FlashCard
           key={card.id}
