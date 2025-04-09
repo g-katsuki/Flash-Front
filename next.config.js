@@ -7,7 +7,16 @@ const nextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true
-  }
+  },
+  reactStrictMode: true,
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      config.watchOptions = {
+        ignored: /.*/,
+      };
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
