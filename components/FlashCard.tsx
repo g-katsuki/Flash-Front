@@ -27,7 +27,7 @@ export function FlashCard({ frontContent, backContent, onEdit, onDelete }: Flash
         <div className="absolute w-full h-full backface-hidden">
           <div className="w-full h-full bg-white rounded-lg shadow-sm p-1.5 flex flex-col">
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-xs font-medium text-gray-800 break-words text-center px-1">{frontContent}</p>
+              <p className="text-xs font-medium text-gray-800 whitespace-normal text-center px-1">{frontContent}</p>
             </div>
             <div className="mt-0.5 flex justify-end space-x-1">
               {onEdit && (
@@ -59,7 +59,7 @@ export function FlashCard({ frontContent, backContent, onEdit, onDelete }: Flash
         </div>
         <div className="absolute w-full h-full backface-hidden rotate-y-180">
           <div className="w-full h-full bg-white rounded-lg shadow-sm p-1.5 flex items-center justify-center">
-            <p className="text-xs text-gray-700 break-words text-center px-1">{backContent}</p>
+            <p className="text-xs text-gray-700 whitespace-normal text-center px-1">{backContent}</p>
           </div>
         </div>
       </div>

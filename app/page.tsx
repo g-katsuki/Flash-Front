@@ -13,7 +13,7 @@ import { CsvUploader } from '@/components/CsvUploader';
 // 変更後：プロトコルに依存しないURLを使用
 // https://katsuki-flashcard.jp
 // http://localhost:8080
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://katsuki-flashcard.jp';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // Temporary mock data until backend is integrated
 const mockFolders: Folder[] = [
@@ -287,26 +287,12 @@ export default function Home() {
         throw new Error('Empty response from server');
       }
 
-      // プレーンテキストをJSONオブジェクトに変換
-      // const sentence = text.split('\n').find(line => 
-      //   line.includes('"') && !line.startsWith('This')
-      // )?.match(/"([^"]+)"/)?.[1] || '';
-      // gpt-4ominiに変えたことで文の携帯が変わったので直接使用
-      const sentence = text.split('\n').find(line => line.includes(''));
-      console.log(sentence);
-      if (sentence) {
-        setGeneratedSentence(sentence);
-        setIsDialogOpen(true);
-      } else {
-        throw new Error('Could not extract sentence from response');
-      }
-    } catch (error) {
+      // レスポンスをそのまま表示
+      setGeneratedSentence(text);
+      setIsDialogOpen(true);
+    } catch (error: unknown) {
       console.error('Error generating sentence:', error);
-      if (error.name === 'AbortError') {
-        alert('Request timed out. Please try again.');
-      } else {
-        alert('Failed to generate sentence. Please try again.');
-      }
+      alert('文の生成中にエラーが発生しました。');
     } finally {
       setIsGenerating(false);
     }
@@ -467,12 +453,12 @@ export default function Home() {
       </main>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Generated Sentence</DialogTitle>
           </DialogHeader>
           <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-lg text-gray-800">{generatedSentence}</p>
+            <p className="text-lg text-gray-800 whitespace-pre-wrap">{generatedSentence}</p>
           </div>
         </DialogContent>
       </Dialog>
