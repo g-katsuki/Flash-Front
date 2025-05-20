@@ -13,7 +13,7 @@ import { CsvUploader } from '@/components/CsvUploader';
 // 変更後：プロトコルに依存しないURLを使用
 // https://katsuki-flashcard.jp
 // http://localhost:8080
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://katsuki-flashcard.jp';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // Temporary mock data until backend is integrated
 const mockFolders: Folder[] = [
@@ -65,7 +65,7 @@ const mockCards: FlashCard[] = [
 ];
 
 export default function Home() {
-  const [folders, setFolders] = useState<Folder[]>(mockFolders);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [cards, setCards] = useState<FlashCard[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -80,14 +80,52 @@ export default function Home() {
   console.log('Selected Folder ID:', selectedFolderId);
   console.log('Filtered Cards:', filteredCards);
 
-  const handleAddFolder = (name: string) => {
-    const newFolder: Folder = {
-      id: Date.now().toString(),
-      name,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setFolders([...folders, newFolder]);
+  // フォルダを取得する関数
+  const fetchFolders = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/folders`, {
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch folders');
+      }
+
+      const data = await response.json();
+      setFolders(data);
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+    }
+  };
+
+  // コンポーネントマウント時にフォルダを取得
+  useEffect(() => {
+    fetchFolders();
+  }, []);
+
+  // フォルダ追加処理
+  const handleAddFolder = async (name: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/folders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add folder');
+      }
+
+      const newFolder = await response.json();
+      setFolders(prevFolders => [...prevFolders, newFolder]);
+    } catch (error) {
+      console.error('Error adding folder:', error);
+    }
   };
 
   const handleEditFolder = (id: string, name: string) => {
@@ -103,11 +141,27 @@ export default function Home() {
     setFolders(updatedFolders);
   };
 
-  const handleDeleteFolder = (id: string) => {
-    setFolders(folders.filter(folder => folder.id !== id));
-    setCards(cards.filter(card => card.folderId !== id));
-    if (selectedFolderId === id) {
-      setSelectedFolderId(null);
+  // フォルダ削除処理
+  const handleDeleteFolder = async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/folders/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete folder');
+      }
+
+      setFolders(prevFolders => prevFolders.filter(folder => folder.id !== id));
+      setCards(prevCards => prevCards.filter(card => card.folderId !== id));
+      if (selectedFolderId === id) {
+        setSelectedFolderId(null);
+      }
+    } catch (error) {
+      console.error('Error deleting folder:', error);
     }
   };
 
