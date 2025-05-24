@@ -128,19 +128,6 @@ export default function Home() {
     }
   };
 
-  const handleEditFolder = (id: string, name: string) => {
-    const updatedFolders = folders.map(folder =>
-      folder.id === id
-        ? {
-            ...folder,
-            name,
-            updatedAt: new Date().toISOString(),
-          }
-        : folder
-    );
-    setFolders(updatedFolders);
-  };
-
   // フォルダ削除処理
   const handleDeleteFolder = async (id: string) => {
     try {
@@ -162,6 +149,33 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error deleting folder:', error);
+    }
+  };
+
+  // フォルダ名の更新処理
+  const handleEditFolder = async (id: string, name: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/folders/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update folder');
+      }
+
+      const updatedFolder = await response.json();
+      setFolders(prevFolders =>
+        prevFolders.map(folder =>
+          folder.id === id ? updatedFolder : folder
+        )
+      );
+    } catch (error) {
+      console.error('Error updating folder:', error);
     }
   };
 
