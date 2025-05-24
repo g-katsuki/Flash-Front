@@ -202,9 +202,11 @@ export default function Home() {
       const newCard: FlashCard = await response.json();
       setCards(prevCards => [...prevCards, newCard]);
       setShowForm(false);
+
+      // 追加したカードを即座に表示するために、現在のフォルダのカードを再取得
+      fetchCardsFromApi(selectedFolderId);
     } catch (error) {
       console.error('Error adding card:', error);
-      // ここでエラーメッセージを表示するなどのエラーハンドリングを追加できます
     }
   };
 
